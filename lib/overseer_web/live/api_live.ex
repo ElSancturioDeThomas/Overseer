@@ -2,6 +2,7 @@ defmodule OverseerWeb.ApiLive do
   use OverseerWeb, :live_view
 
   alias Overseer.Management.EntityManagement
+  alias Overseer.PublicApi.BasicInfo
   alias Overseer.PublicApi.OpenApiSpec
 
   @impl true
@@ -53,16 +54,44 @@ defmodule OverseerWeb.ApiLive do
         </div>
 
         <div class="mt-6">
-          <h3 class="text-sm font-semibold">Put it on your own domain</h3>
-          <p class="mt-1 text-sm text-base-content/70">
-            Download the spec and host it at
-            <code class="font-mono">https://yourdomain.com/.well-known/openapi.json</code>
-            so agents and LLMs visiting your site can discover it. Calls are served by
-            Overseer either way. Re-download after changing what you publish.
+          <h3 class="text-sm font-semibold">Serve it on your own domain</h3>
+
+          <p :if={!@custom_domain} class="mt-1 text-sm text-base-content/70">
+            Enter a subdomain you own (like <code class="font-mono">api.yourdomain.com</code>)
+            and add one DNS record. Your API is then live on your domain — nothing to host.
           </p>
-          <.button variant="primary" class="mt-3" href={@spec_url} download="openapi.json">
-            <.icon name="hero-arrow-down-tray" class="size-4" /> Download openapi.json
-          </.button>
+
+          <.form for={@domain_form} id="custom-domain-form" phx-submit="save_domain" class="mt-3">
+            <div class="flex items-end gap-3">
+              <div class="grow max-w-md">
+                <.input
+                  field={@domain_form[:custom_domain]}
+                  type="text"
+                  label="Custom domain"
+                  placeholder="api.yourdomain.com"
+                />
+              </div>
+              <.button variant="primary" phx-disable-with="Saving...">Save</.button>
+              <.button :if={@custom_domain} phx-click="remove_domain" type="button">
+                Remove
+              </.button>
+            </div>
+          </.form>
+
+          <div :if={@custom_domain} class="mt-4 space-y-3 text-sm">
+            <p>Add this record at your DNS provider:</p>
+            <pre class="rounded-box bg-base-200 p-4 font-mono text-xs">{@cname_record}</pre>
+            <p>Once DNS propagates, your API answers on your domain:</p>
+            <ul class="ml-5 list-disc space-y-1 font-mono text-xs">
+              <li>https://{@custom_domain}/openapi.json</li>
+              <li>https://{@custom_domain}/.well-known/openapi.json</li>
+              <li>https://{@custom_domain}/basic-info</li>
+            </ul>
+            <p class="text-base-content/70">
+              HTTPS certificates are provisioned by Overseer after the DNS record is in
+              place; allow a few minutes on first setup.
+            </p>
+          </div>
         </div>
 
         <div class="mt-6">
@@ -94,22 +123,55 @@ defmodule OverseerWeb.ApiLive do
     {:noreply, socket |> assign_api_state() |> put_flash(:info, message)}
   end
 
+  def handle_event("save_domain", %{"entity" => entity_params}, socket) do
+    case EntityManagement.update_custom_domain(socket.assigns.current_entity, entity_params) do
+      {:ok, entity} ->
+        message =
+          if entity.custom_domain,
+            do: "Custom domain saved. Add the DNS record below to finish setup.",
+            else: "Custom domain removed."
+
+        {:noreply, socket |> assign_api_state() |> put_flash(:info, message)}
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        {:noreply, assign(socket, :domain_form, to_form(changeset))}
+    end
+  end
+
+  def handle_event("remove_domain", _params, socket) do
+    {:ok, _entity} =
+      EntityManagement.update_custom_domain(socket.assigns.current_entity, %{
+        custom_domain: nil
+      })
+
+    {:noreply, socket |> assign_api_state() |> put_flash(:info, "Custom domain removed.")}
+  end
+
   # Reloads the entity so the api_config embed is fresh, then derives
   # everything the page shows from it.
   defp assign_api_state(socket) do
     entity = EntityManagement.get_entity!(socket.assigns.current_entity.id)
-    public? = Overseer.PublicApi.BasicInfo.public?(entity)
+    public? = BasicInfo.public?(entity)
     base_url = OverseerWeb.Endpoint.url()
+    app_host = OverseerWeb.Endpoint.config(:url)[:host] || "localhost"
+
+    # The preview mirrors what agents will actually fetch: the custom
+    # domain when one is set, the canonical URL otherwise.
+    server_url =
+      if entity.custom_domain,
+        do: "https://#{entity.custom_domain}",
+        else: "#{base_url}/api/v1/#{entity.uen}"
 
     assign(socket,
       current_entity: entity,
       basic_info_public: public?,
+      custom_domain: entity.custom_domain,
+      domain_form: to_form(EntityManagement.change_custom_domain(entity)),
+      cname_record: "#{entity.custom_domain || "api.yourdomain.com"}  CNAME  #{app_host}",
       spec_url: "#{base_url}/api/v1/#{entity.uen}/openapi.json",
       basic_info_url: "#{base_url}/api/v1/#{entity.uen}/basic-info",
       spec_json:
-        if(public?,
-          do: Jason.encode!(OpenApiSpec.generate(entity, base_url), pretty: true)
-        )
+        if(public?, do: Jason.encode!(OpenApiSpec.generate(entity, server_url), pretty: true))
     )
   end
 end

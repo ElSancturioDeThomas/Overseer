@@ -47,6 +47,30 @@ defmodule Overseer.Management.EntityManagement do
   end
 
   @doc """
+  Gets the entity whose public API is served on the given custom
+  domain, or nil if no entity has claimed it.
+  """
+  def get_entity_by_custom_domain(domain) when is_binary(domain) do
+    Repo.get_by(Entity, custom_domain: String.downcase(domain))
+  end
+
+  @doc """
+  Returns a changeset for the entity's custom domain form.
+  """
+  def change_custom_domain(%Entity{} = entity, attrs \\ %{}) do
+    Entity.custom_domain_changeset(entity, attrs)
+  end
+
+  @doc """
+  Sets or clears (pass an empty value) the entity's custom domain.
+  """
+  def update_custom_domain(%Entity{} = entity, attrs) do
+    entity
+    |> Entity.custom_domain_changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
   Updates the entity's public API configuration (the opt-in flags for
   the unauthenticated /api/v1 endpoints).
   """

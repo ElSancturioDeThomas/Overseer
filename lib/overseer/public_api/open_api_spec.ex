@@ -3,10 +3,8 @@ defmodule Overseer.PublicApi.OpenApiSpec do
   Generates the per-entity OpenAPI 3.1 document for the public API.
 
   Only sections the entity has opted into appear in the spec, so the
-  document is safe to publish anywhere (including on the org's own
-  domain as `/.well-known/openapi.json`). The `servers` URL points back
-  at Overseer, which is what routes agent calls to us regardless of
-  where the file is hosted.
+  document is safe to serve anywhere — on the canonical host or on the
+  entity's own custom domain.
   """
 
   alias Overseer.PublicApi.BasicInfo
@@ -14,10 +12,12 @@ defmodule Overseer.PublicApi.OpenApiSpec do
   @doc """
   Builds the OpenAPI document map for the given entity.
 
-  `base_url` is the public root of this Overseer instance,
-  e.g. `https://overseer-app.fly.dev`.
+  `server_url` is the base URL the spec's paths hang off, matching how
+  the caller is serving the API: `https://api.heal.enterprises` on a
+  custom domain, or `https://overseer-app.fly.dev/api/v1/<uen>` on the
+  canonical host.
   """
-  def generate(entity, base_url) do
+  def generate(entity, server_url) do
     %{
       openapi: "3.1.0",
       info: %{
@@ -27,7 +27,7 @@ defmodule Overseer.PublicApi.OpenApiSpec do
             "via Overseer. All endpoints are read-only and require no authentication.",
         version: "1.0.0"
       },
-      servers: [%{url: "#{base_url}/api/v1/#{entity.uen}"}],
+      servers: [%{url: server_url}],
       paths: paths(entity)
     }
   end

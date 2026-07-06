@@ -51,5 +51,6 @@ defmodule OverseerWeb.Endpoint do
   plug Plug.MethodOverride
   plug Plug.Head
   plug Plug.Session, @session_options
+  plug OverseerWeb.Plugs.PublicApiDomain
   plug OverseerWeb.Router
 end

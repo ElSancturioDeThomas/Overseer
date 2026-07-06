@@ -44,13 +44,23 @@ defmodule OverseerWeb.Router do
   end
 
   # Public, unauthenticated, opt-in API. Third parties hardcode these
-  # URLs in openapi.json files hosted on their own domains, so the /v1
-  # contract must stay stable.
+  # URLs, so the /v1 contract must stay stable.
   scope "/api/v1", OverseerWeb do
     pipe_through :api
 
     get "/:uen/openapi.json", PublicApiController, :openapi
     get "/:uen/basic-info", PublicApiController, :basic_info
+  end
+
+  # Host-style public API for entities with a custom domain CNAME'd at
+  # this app. Plugs.PublicApiDomain assigns :public_entity from the Host
+  # header; on the canonical host these routes 404 in the controller.
+  scope "/", OverseerWeb do
+    pipe_through :api
+
+    get "/openapi.json", PublicApiController, :openapi
+    get "/basic-info", PublicApiController, :basic_info
+    get "/.well-known/openapi.json", PublicApiController, :openapi
   end
 
   scope "/mcp" do
