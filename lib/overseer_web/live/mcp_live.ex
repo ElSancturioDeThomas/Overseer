@@ -9,7 +9,7 @@ defmodule OverseerWeb.McpLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} active_tab={:mcp}>
+    <Layouts.app flash={@flash} active_tab={:mcp} current_entity={@current_entity}>
       <.header>
         MCP
         <:subtitle>Model Context Protocol servers.</:subtitle>

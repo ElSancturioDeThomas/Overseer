@@ -9,7 +9,7 @@ defmodule OverseerWeb.ApiLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} active_tab={:api}>
+    <Layouts.app flash={@flash} active_tab={:api} current_entity={@current_entity}>
       <.header>
         API
         <:subtitle>API keys and programmatic access.</:subtitle>

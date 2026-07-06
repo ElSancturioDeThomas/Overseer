@@ -9,10 +9,10 @@ defmodule OverseerWeb.PartnersLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} active_tab={:partners}>
+    <Layouts.app flash={@flash} active_tab={:partners} current_entity={@current_entity}>
       <.header>
         Partners
-        <:subtitle>Suppliers, vendors, and partners associated with your entities.</:subtitle>
+        <:subtitle>Suppliers, vendors, and partners associated with {@current_entity.uen}.</:subtitle>
       </.header>
 
       <p class="mt-4 text-base-content/70">

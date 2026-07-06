@@ -34,7 +34,17 @@ defmodule OverseerWeb.Layouts do
 
   attr(:active_tab, :atom,
     default: nil,
-    doc: "which sidebar nav item is currently active, e.g. :entity"
+    doc: "which sidebar nav item is currently active, e.g. :people"
+  )
+
+  attr(:current_entity, :map,
+    default: nil,
+    doc: "the entity the current page is scoped to; shows the entity nav section when set"
+  )
+
+  attr(:sidebar, :boolean,
+    default: true,
+    doc: "whether to render the sidebar; the entity picker at / hides it"
   )
 
   slot(:inner_block, required: true)
@@ -42,7 +52,7 @@ defmodule OverseerWeb.Layouts do
   def app(assigns) do
     ~H"""
     <div class="flex min-h-screen">
-      <aside class="flex w-60 shrink-0 flex-col border-r border-base-300 bg-base-200">
+      <aside :if={@sidebar} class="flex w-60 shrink-0 flex-col border-r border-base-300 bg-base-200">
         <a href={~p"/"} class="flex h-16 items-center gap-2 border-b border-base-300 px-4">
           <img src={~p"/images/logo.svg"} width="28" />
           <span class="text-lg font-semibold">Overseer</span>
@@ -50,46 +60,53 @@ defmodule OverseerWeb.Layouts do
 
         <nav class="flex-1 p-3">
           <ul class="menu w-full gap-1">
-            <li class="menu-title">Company</li>
-            <.nav_link navigate={~p"/"} icon="hero-home" active={@active_tab == :home}>
-              Home
-            </.nav_link>
-            <.nav_link navigate={~p"/entity"} icon="hero-building-office-2" active={@active_tab == :entity}>
-              Entity
-            </.nav_link>
-            <.nav_link navigate={~p"/people"} icon="hero-users" active={@active_tab == :people}>
-              People
-            </.nav_link>
-            <.nav_link navigate={~p"/partners"} icon="hero-building-storefront" active={@active_tab == :partners}>
-              Partners
-            </.nav_link>
-            <.nav_link navigate={~p"/assets"} icon="hero-banknotes" active={@active_tab == :assets}>
-              Assets
-            </.nav_link>
-            <.nav_link navigate={~p"/map"} icon="hero-map" active={@active_tab == :map}>
-              Map
-            </.nav_link>
-            <.nav_link navigate={~p"/assistant"} icon="hero-sparkles" active={@active_tab == :assistant}>
-              Assistant
-            </.nav_link>
+            <%= if @current_entity do %>
+              <li class="menu-title">Company</li>
+              <.nav_link navigate={~p"/#{@current_entity.uen}/home"} icon="hero-home" active={@active_tab == :home}>
+                Home
+              </.nav_link>
+              <.nav_link navigate={~p"/#{@current_entity.uen}/people"} icon="hero-users" active={@active_tab == :people}>
+                People
+              </.nav_link>
+              <.nav_link navigate={~p"/#{@current_entity.uen}/partners"} icon="hero-building-storefront" active={@active_tab == :partners}>
+                Partners
+              </.nav_link>
+              <.nav_link navigate={~p"/#{@current_entity.uen}/assets"} icon="hero-banknotes" active={@active_tab == :assets}>
+                Assets
+              </.nav_link>
+              <.nav_link navigate={~p"/#{@current_entity.uen}/map"} icon="hero-map" active={@active_tab == :map}>
+                Map
+              </.nav_link>
+              <.nav_link navigate={~p"/#{@current_entity.uen}/assistant"} icon="hero-sparkles" active={@active_tab == :assistant}>
+                Assistant
+              </.nav_link>
+              <.nav_link navigate={~p"/#{@current_entity.uen}/settings"} icon="hero-cog-6-tooth" active={@active_tab == :settings}>
+                Settings
+              </.nav_link>
 
-            <li class="menu-title">Connect</li>
-            <.nav_link navigate={~p"/integrations"} icon="hero-link" active={@active_tab == :integrations}>
-              Integrations
-            </.nav_link>
-            <.nav_link navigate={~p"/api"} icon="hero-code-bracket" active={@active_tab == :api}>
-              API
-            </.nav_link>
-            <.nav_link navigate={~p"/mcp"} icon="hero-cube" active={@active_tab == :mcp}>
-              MCP
-            </.nav_link>
+              <li class="menu-title">Connect</li>
+              <.nav_link navigate={~p"/#{@current_entity.uen}/integrations"} icon="hero-link" active={@active_tab == :integrations}>
+                Integrations
+              </.nav_link>
+              <.nav_link navigate={~p"/#{@current_entity.uen}/api"} icon="hero-code-bracket" active={@active_tab == :api}>
+                API
+              </.nav_link>
+              <.nav_link navigate={~p"/#{@current_entity.uen}/mcp"} icon="hero-cube" active={@active_tab == :mcp}>
+                MCP
+              </.nav_link>
+            <% end %>
           </ul>
         </nav>
       </aside>
 
       <div class="flex flex-1 flex-col">
         <header class="navbar border-b border-base-300 px-4 sm:px-6 lg:px-8">
-          <div class="flex-1"></div>
+          <div class="flex-1">
+            <a :if={!@sidebar} href={~p"/"} class="flex items-center gap-2">
+              <img src={~p"/images/logo.svg"} width="28" />
+              <span class="text-lg font-semibold">Overseer</span>
+            </a>
+          </div>
           <div class="flex-none">
             <.theme_toggle />
           </div>

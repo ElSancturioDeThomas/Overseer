@@ -9,7 +9,7 @@ defmodule OverseerWeb.IntegrationsLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} active_tab={:integrations}>
+    <Layouts.app flash={@flash} active_tab={:integrations} current_entity={@current_entity}>
       <.header>
         Integrations
         <:subtitle>Connect Overseer to external services.</:subtitle>

@@ -17,22 +17,27 @@ defmodule OverseerWeb.Router do
   scope "/", OverseerWeb do
     pipe_through :browser
 
-    live "/", HomeLive, :home
-    live "/entity", EntityLive, :index
+    live "/", EntityLive, :index
     live "/entity/new", EntityLive.Form, :new
-    live "/entity/:id/edit", EntityLive.Form, :edit
-    live "/people", PeopleLive, :index
-    live "/people/new", PeopleLive.Form, :new
-    live "/people/:id/edit", PeopleLive.Form, :edit
-    live "/partners", PartnersLive, :index
-    live "/assets", AssetsLive, :index
-    live "/assets/new", AssetsLive.Form, :new
-    live "/assets/:id/edit", AssetsLive.Form, :edit
-    live "/map", MapLive, :index
-    live "/assistant", AssistantLive, :index
-    live "/integrations", IntegrationsLive, :index
-    live "/api", ApiLive, :index
-    live "/mcp", McpLive, :index
+
+    # Routes scoped to a single entity, identified by its UEN.
+    # EntityScope resolves the UEN and assigns :current_entity.
+    live_session :entity_scope, on_mount: OverseerWeb.EntityScope do
+      live "/:uen/home", HomeLive, :home
+      live "/:uen/settings", EntityLive.Form, :edit
+      live "/:uen/people", PeopleLive, :index
+      live "/:uen/people/new", PeopleLive.Form, :new
+      live "/:uen/people/:id/edit", PeopleLive.Form, :edit
+      live "/:uen/partners", PartnersLive, :index
+      live "/:uen/assets", AssetsLive, :index
+      live "/:uen/assets/new", AssetsLive.Form, :new
+      live "/:uen/assets/:id/edit", AssetsLive.Form, :edit
+      live "/:uen/map", MapLive, :index
+      live "/:uen/assistant", AssistantLive, :index
+      live "/:uen/integrations", IntegrationsLive, :index
+      live "/:uen/api", ApiLive, :index
+      live "/:uen/mcp", McpLive, :index
+    end
   end
 
   # Other scopes may use custom stacks.

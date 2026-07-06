@@ -10,7 +10,7 @@ defmodule Overseer.Registry.Person do
     field(:appointment_date, :date)
     field(:resignation_date, :date)
     field(:designation, :string)
-    field(:role, :string)
+    field(:access_level, :string)
 
     belongs_to(:entity, Overseer.Registry.Entity)
     timestamps()
@@ -26,7 +26,7 @@ defmodule Overseer.Registry.Person do
       :appointment_date,
       :resignation_date,
       :designation,
-      :role,
+      :access_level,
       :entity_id
     ])
     |> validate_required([:name, :dob, :id_number, :entity_id])

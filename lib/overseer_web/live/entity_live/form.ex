@@ -7,7 +7,12 @@ defmodule OverseerWeb.EntityLive.Form do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} active_tab={:entity}>
+    <Layouts.app
+      flash={@flash}
+      sidebar={@live_action == :edit}
+      active_tab={:settings}
+      current_entity={@current_entity}
+    >
       <.header>
         {@page_title}
         <:subtitle>Fields marked required must be filled in.</:subtitle>
@@ -25,7 +30,7 @@ defmodule OverseerWeb.EntityLive.Form do
 
         <footer class="mt-4 flex items-center gap-3">
           <.button variant="primary" phx-disable-with="Saving...">Save Entity</.button>
-          <.button navigate={~p"/entity"}>Cancel</.button>
+          <.button navigate={cancel_path(@current_entity)}>Cancel</.button>
         </footer>
       </.form>
     </Layouts.app>
@@ -37,23 +42,30 @@ defmodule OverseerWeb.EntityLive.Form do
     {:ok, apply_action(socket, socket.assigns.live_action, params)}
   end
 
+  # /entity/new is global: there is no entity yet, so no scope or sidebar.
   defp apply_action(socket, :new, _params) do
     entity = %Entity{}
 
     socket
     |> assign(:page_title, "New Entity")
+    |> assign(:current_entity, nil)
     |> assign(:entity, entity)
     |> assign(:form, to_form(EntityManagement.change_entity(entity)))
   end
 
-  defp apply_action(socket, :edit, %{"id" => id}) do
-    entity = EntityManagement.get_entity!(id)
+  # /:uen/settings is scoped: EntityScope already resolved the UEN into
+  # :current_entity, so the form edits that record directly.
+  defp apply_action(socket, :edit, _params) do
+    entity = socket.assigns.current_entity
 
     socket
-    |> assign(:page_title, "Edit Entity")
+    |> assign(:page_title, "Settings")
     |> assign(:entity, entity)
     |> assign(:form, to_form(EntityManagement.change_entity(entity)))
   end
+
+  defp cancel_path(nil), do: ~p"/"
+  defp cancel_path(entity), do: ~p"/#{entity.uen}/home"
 
   @impl true
   def handle_event("validate", %{"entity" => entity_params}, socket) do
@@ -71,7 +83,7 @@ defmodule OverseerWeb.EntityLive.Form do
         {:noreply,
          socket
          |> put_flash(:info, "Entity created successfully")
-         |> push_navigate(to: ~p"/entity")}
+         |> push_navigate(to: ~p"/")}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, :form, to_form(changeset))}
@@ -80,11 +92,12 @@ defmodule OverseerWeb.EntityLive.Form do
 
   defp save_entity(socket, :edit, entity_params) do
     case EntityManagement.update_entity(socket.assigns.entity, entity_params) do
-      {:ok, _entity} ->
+      {:ok, entity} ->
+        # Use the saved entity's UEN in case it was just changed.
         {:noreply,
          socket
          |> put_flash(:info, "Entity updated successfully")
-         |> push_navigate(to: ~p"/entity")}
+         |> push_navigate(to: ~p"/#{entity.uen}/home")}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, :form, to_form(changeset))}

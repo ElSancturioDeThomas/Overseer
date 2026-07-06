@@ -2,13 +2,12 @@ defmodule OverseerWeb.AssetsLive.Form do
   use OverseerWeb, :live_view
 
   alias Overseer.Management.AssetManagement
-  alias Overseer.Management.EntityManagement
   alias Overseer.Registry.Asset
 
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} active_tab={:assets}>
+    <Layouts.app flash={@flash} active_tab={:assets} current_entity={@current_entity}>
       <.header>
         {@page_title}
         <:subtitle>Fields marked required must be filled in.</:subtitle>
@@ -20,17 +19,10 @@ defmodule OverseerWeb.AssetsLive.Form do
         <.input field={@form[:type]} type="text" label="Type" />
         <.input field={@form[:value]} type="number" label="Value" step="0.01" />
         <.input field={@form[:acquisition_date]} type="date" label="Acquisition date" />
-        <.input
-          field={@form[:entity_id]}
-          type="select"
-          label="Entity"
-          prompt="Select an entity"
-          options={@entity_options}
-        />
 
         <footer class="mt-4 flex items-center gap-3">
           <.button variant="primary" phx-disable-with="Saving...">Save Asset</.button>
-          <.button navigate={~p"/assets"}>Cancel</.button>
+          <.button navigate={~p"/#{@current_entity.uen}/assets"}>Cancel</.button>
         </footer>
       </.form>
     </Layouts.app>
@@ -39,12 +31,7 @@ defmodule OverseerWeb.AssetsLive.Form do
 
   @impl true
   def mount(params, _session, socket) do
-    entity_options = Enum.map(EntityManagement.list_entities(), &{&1.uen, &1.id})
-
-    {:ok,
-     socket
-     |> assign(:entity_options, entity_options)
-     |> apply_action(socket.assigns.live_action, params)}
+    {:ok, apply_action(socket, socket.assigns.live_action, params)}
   end
 
   defp apply_action(socket, :new, _params) do
@@ -56,8 +43,9 @@ defmodule OverseerWeb.AssetsLive.Form do
     |> assign(:form, to_form(AssetManagement.change_asset(asset)))
   end
 
+  # Scoped to the current entity so ids from other entities 404.
   defp apply_action(socket, :edit, %{"id" => id}) do
-    asset = AssetManagement.get_asset!(id)
+    asset = AssetManagement.get_asset!(socket.assigns.current_entity.id, id)
 
     socket
     |> assign(:page_title, "Edit Asset")
@@ -72,7 +60,12 @@ defmodule OverseerWeb.AssetsLive.Form do
   end
 
   def handle_event("save", %{"asset" => asset_params}, socket) do
-    save_asset(socket, socket.assigns.live_action, asset_params)
+    save_asset(socket, socket.assigns.live_action, put_entity_id(asset_params, socket))
+  end
+
+  # The entity comes from the URL scope, not the form.
+  defp put_entity_id(asset_params, socket) do
+    Map.put(asset_params, "entity_id", socket.assigns.current_entity.id)
   end
 
   defp save_asset(socket, :new, asset_params) do
@@ -81,7 +74,7 @@ defmodule OverseerWeb.AssetsLive.Form do
         {:noreply,
          socket
          |> put_flash(:info, "Asset created successfully")
-         |> push_navigate(to: ~p"/assets")}
+         |> push_navigate(to: ~p"/#{socket.assigns.current_entity.uen}/assets")}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, :form, to_form(changeset))}
@@ -94,7 +87,7 @@ defmodule OverseerWeb.AssetsLive.Form do
         {:noreply,
          socket
          |> put_flash(:info, "Asset updated successfully")
-         |> push_navigate(to: ~p"/assets")}
+         |> push_navigate(to: ~p"/#{socket.assigns.current_entity.uen}/assets")}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, :form, to_form(changeset))}

@@ -2,7 +2,7 @@ defmodule Overseer.MCPServer do
   use EMCP.Server,
     name: "overseer-mcp",
     version: "1.0.0",
-    tools: [Overseer.Tools.ListEntities],
+    tools: Overseer.Tools.read_only(),
     prompts: [],
     resources: [],
     resource_templates: [],

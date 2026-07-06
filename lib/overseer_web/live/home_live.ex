@@ -16,10 +16,10 @@ defmodule OverseerWeb.HomeLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} active_tab={:home}>
+    <Layouts.app flash={@flash} active_tab={:home} current_entity={@current_entity}>
       <.header>
-        Overseer
-        <:subtitle>Your barebones starting point.</:subtitle>
+        {@current_entity.uen}
+        <:subtitle>Your company at a glance.</:subtitle>
       </.header>
 
       <p class="mt-4 text-2xl font-semibold">Happy {@weekday}!</p>

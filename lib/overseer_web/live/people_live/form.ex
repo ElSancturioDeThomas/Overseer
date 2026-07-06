@@ -2,13 +2,12 @@ defmodule OverseerWeb.PeopleLive.Form do
   use OverseerWeb, :live_view
 
   alias Overseer.Management.PeopleManagement
-  alias Overseer.Management.EntityManagement
   alias Overseer.Registry.Person
 
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} active_tab={:people}>
+    <Layouts.app flash={@flash} active_tab={:people} current_entity={@current_entity}>
       <.header>
         {@page_title}
         <:subtitle>Fields marked required must be filled in.</:subtitle>
@@ -19,21 +18,14 @@ defmodule OverseerWeb.PeopleLive.Form do
         <.input field={@form[:dob]} type="date" label="Date of birth" />
         <.input field={@form[:id_number]} type="text" label="ID number" />
         <.input field={@form[:designation]} type="text" label="Designation" />
-        <.input field={@form[:role]} type="text" label="Role" />
+        <.input field={@form[:access_level]} type="text" label="Access level" />
         <.input field={@form[:residential_address]} type="textarea" label="Residential address" />
         <.input field={@form[:appointment_date]} type="date" label="Appointment date" />
         <.input field={@form[:resignation_date]} type="date" label="Resignation date" />
-        <.input
-          field={@form[:entity_id]}
-          type="select"
-          label="Entity"
-          prompt="Select an entity"
-          options={@entity_options}
-        />
 
         <footer class="mt-4 flex items-center gap-3">
           <.button variant="primary" phx-disable-with="Saving...">Save Person</.button>
-          <.button navigate={~p"/people"}>Cancel</.button>
+          <.button navigate={~p"/#{@current_entity.uen}/people"}>Cancel</.button>
         </footer>
       </.form>
     </Layouts.app>
@@ -42,17 +34,10 @@ defmodule OverseerWeb.PeopleLive.Form do
 
   @impl true
   def mount(params, _session, socket) do
-    # Build the <select> options once: a list of {label, value} tuples.
-    # The label is what the user sees (the UEN), the value is what gets saved (the id).
-    entity_options = Enum.map(EntityManagement.list_entities(), &{&1.uen, &1.id})
-
-    {:ok,
-     socket
-     |> assign(:entity_options, entity_options)
-     |> apply_action(socket.assigns.live_action, params)}
+    {:ok, apply_action(socket, socket.assigns.live_action, params)}
   end
 
-  # When the route is /people/new, start from a blank %Person{}.
+  # When the route is /:uen/people/new, start from a blank %Person{}.
   defp apply_action(socket, :new, _params) do
     person = %Person{}
 
@@ -62,9 +47,10 @@ defmodule OverseerWeb.PeopleLive.Form do
     |> assign(:form, to_form(PeopleManagement.change_person(person)))
   end
 
-  # When the route is /people/:id/edit, load the existing person from the DB.
+  # When the route is /:uen/people/:id/edit, load the existing person from
+  # the DB, scoped to the current entity so ids from other entities 404.
   defp apply_action(socket, :edit, %{"id" => id}) do
-    person = PeopleManagement.get_person!(id)
+    person = PeopleManagement.get_person!(socket.assigns.current_entity.id, id)
 
     socket
     |> assign(:page_title, "Edit Person")
@@ -82,7 +68,12 @@ defmodule OverseerWeb.PeopleLive.Form do
 
   # Fired on submit: branch on whether we are creating or editing.
   def handle_event("save", %{"person" => person_params}, socket) do
-    save_person(socket, socket.assigns.live_action, person_params)
+    save_person(socket, socket.assigns.live_action, put_entity_id(person_params, socket))
+  end
+
+  # The entity comes from the URL scope, not the form.
+  defp put_entity_id(person_params, socket) do
+    Map.put(person_params, "entity_id", socket.assigns.current_entity.id)
   end
 
   defp save_person(socket, :new, person_params) do
@@ -91,7 +82,7 @@ defmodule OverseerWeb.PeopleLive.Form do
         {:noreply,
          socket
          |> put_flash(:info, "Person created successfully")
-         |> push_navigate(to: ~p"/people")}
+         |> push_navigate(to: ~p"/#{socket.assigns.current_entity.uen}/people")}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, :form, to_form(changeset))}
@@ -104,7 +95,7 @@ defmodule OverseerWeb.PeopleLive.Form do
         {:noreply,
          socket
          |> put_flash(:info, "Person updated successfully")
-         |> push_navigate(to: ~p"/people")}
+         |> push_navigate(to: ~p"/#{socket.assigns.current_entity.uen}/people")}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, :form, to_form(changeset))}

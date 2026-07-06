@@ -21,7 +21,7 @@ defmodule OverseerWeb.AssistantLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} active_tab={:assistant}>
+    <Layouts.app flash={@flash} active_tab={:assistant} current_entity={@current_entity}>
       <.header>
         Assistant
         <:subtitle>Ask questions about your data and run actions.</:subtitle>

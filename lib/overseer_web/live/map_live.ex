@@ -17,10 +17,10 @@ defmodule OverseerWeb.MapLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} active_tab={:map}>
+    <Layouts.app flash={@flash} active_tab={:map} current_entity={@current_entity}>
       <.header>
         Map
-        <:subtitle>Geographic view of entities and assets.</:subtitle>
+        <:subtitle>Geographic view of {@current_entity.uen} and its assets.</:subtitle>
       </.header>
 
       <%!-- The Leaflet hook (app.js) reads these data-* attributes and renders the
