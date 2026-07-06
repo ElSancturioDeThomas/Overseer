@@ -12,6 +12,9 @@ primary_region = "syd"
 [env]
   PHX_HOST = "overseer-app.fly.dev"
   PORT = "4000"
+  # Fly's private DNS (.flycast/.internal) returns IPv6-only records, so Ecto
+  # must connect over IPv6. This flips runtime.exs to socket_options: [:inet6].
+  ECTO_IPV6 = "true"
 
 # Runs database migrations on every deploy, before the new release goes live.
 [deploy]
