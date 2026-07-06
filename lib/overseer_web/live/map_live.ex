@@ -6,11 +6,11 @@ defmodule OverseerWeb.MapLive do
     {:ok,
      assign(socket,
        page_title: "Map",
-       # Centre on Singapore for now.
-       center: %{lat: 1.3521, lng: 103.8198},
-       zoom: 12,
+       # Centre on St Georges Terrace, Perth for now.
+       center: %{lat: -31.9557, lng: 115.8586},
+       zoom: 15,
        # A sample marker until real geocoded entity/asset data is wired in.
-       markers: [%{lat: 1.2834, lng: 103.8607, label: "Marina Bay (sample marker)"}]
+       markers: [%{lat: -31.9557, lng: 115.8586, label: "St Georges Terrace"}]
      )}
   end
 
