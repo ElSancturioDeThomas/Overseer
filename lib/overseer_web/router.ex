@@ -33,6 +33,9 @@ defmodule OverseerWeb.Router do
       live "/:uen/assets/new", AssetsLive.Form, :new
       live "/:uen/assets/:id/edit", AssetsLive.Form, :edit
       live "/:uen/map", MapLive, :index
+      live "/:uen/sops", SopsLive, :index
+      live "/:uen/sops/new", SopsLive.Form, :new
+      live "/:uen/sops/:id/edit", SopsLive.Form, :edit
       live "/:uen/assistant", AssistantLive, :index
       live "/:uen/integrations", IntegrationsLive, :index
       live "/:uen/api", ApiLive, :index

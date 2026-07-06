@@ -77,6 +77,9 @@ defmodule OverseerWeb.Layouts do
               <.nav_link navigate={~p"/#{@current_entity.uen}/map"} icon="hero-map" active={@active_tab == :map}>
                 Map
               </.nav_link>
+              <.nav_link navigate={~p"/#{@current_entity.uen}/sops"} icon="hero-clipboard-document-list" active={@active_tab == :sops}>
+                SOPs
+              </.nav_link>
               <.nav_link navigate={~p"/#{@current_entity.uen}/assistant"} icon="hero-sparkles" active={@active_tab == :assistant}>
                 Assistant
               </.nav_link>
