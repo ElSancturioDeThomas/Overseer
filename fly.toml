@@ -4,13 +4,13 @@
 # Bedrock calls default to ap-southeast-1 (Singapore, `sin`); co-locating in
 # `sin` would slightly lower LLM latency if you'd rather switch.
 
-app = "overseer"
+app = "overseer-app"
 primary_region = "syd"
 
 [build]
 
 [env]
-  PHX_HOST = "overseer.fly.dev"
+  PHX_HOST = "overseer-app.fly.dev"
   PORT = "4000"
 
 # Runs database migrations on every deploy, before the new release goes live.
