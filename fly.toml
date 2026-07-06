@@ -1,10 +1,11 @@
 # fly.toml for the Overseer Phoenix app.
 # Adjust `app` and `primary_region` to taste before deploying.
-# Region `sin` (Singapore) is chosen to sit close to AWS ap-southeast-1
-# (Bedrock) used by the LLM module.
+# NOTE: region `syd` (Sydney) is set here to match your launch. Your AWS
+# Bedrock calls default to ap-southeast-1 (Singapore, `sin`); co-locating in
+# `sin` would slightly lower LLM latency if you'd rather switch.
 
 app = "overseer"
-primary_region = "sin"
+primary_region = "syd"
 
 [build]
 
