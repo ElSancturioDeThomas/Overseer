@@ -43,10 +43,15 @@ defmodule OverseerWeb.Router do
     end
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", OverseerWeb do
-  #   pipe_through :api
-  # end
+  # Public, unauthenticated, opt-in API. Third parties hardcode these
+  # URLs in openapi.json files hosted on their own domains, so the /v1
+  # contract must stay stable.
+  scope "/api/v1", OverseerWeb do
+    pipe_through :api
+
+    get "/:uen/openapi.json", PublicApiController, :openapi
+    get "/:uen/basic-info", PublicApiController, :basic_info
+  end
 
   scope "/mcp" do
     forward "/", EMCP.Transport.StreamableHTTP, server: Overseer.MCPServer

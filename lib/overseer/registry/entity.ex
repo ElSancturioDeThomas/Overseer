@@ -13,6 +13,8 @@ defmodule Overseer.Registry.Entity do
     field(:suburb, :string)
     field(:contact_number, :string)
 
+    embeds_one(:api_config, Overseer.Registry.ApiConfig, on_replace: :update)
+
     # This automatically adds inserted_at and updated_at timestamps!
     timestamps()
   end

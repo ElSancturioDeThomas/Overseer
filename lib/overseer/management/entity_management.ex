@@ -47,6 +47,17 @@ defmodule Overseer.Management.EntityManagement do
   end
 
   @doc """
+  Updates the entity's public API configuration (the opt-in flags for
+  the unauthenticated /api/v1 endpoints).
+  """
+  def update_api_config(%Entity{} = entity, attrs) do
+    entity
+    |> Ecto.Changeset.cast(%{api_config: attrs}, [])
+    |> Ecto.Changeset.cast_embed(:api_config)
+    |> Repo.update()
+  end
+
+  @doc """
   Deletes an existing entity from the database.
   """
   def delete_entity(%Entity{} = entity) do
